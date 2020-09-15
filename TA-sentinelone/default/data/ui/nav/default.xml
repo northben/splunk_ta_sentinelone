@@ -1,0 +1,5 @@
+<nav search_view="search">
+  <view name="Threats"  default='true' />
+  <view name="Network" />
+  <view name="search"/>
+</nav>

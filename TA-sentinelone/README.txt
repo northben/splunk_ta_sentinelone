@@ -1,0 +1,1 @@
+This is a Splunk Cloud compatible add-on for SentinelOne

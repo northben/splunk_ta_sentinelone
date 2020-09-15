@@ -1,0 +1,263 @@
+<form theme="light">
+  <label>Threats</label>
+  <fieldset submitButton="false" autoRun="true">
+    <input type="multiselect" token="input_management" searchWhenChanged="true">
+      <label>Management(s)</label>
+      <choice value="*">ALL</choice>
+      <default>*</default>
+      <prefix>(</prefix>
+      <suffix>)</suffix>
+      <initialValue>*</initialValue>
+      <valuePrefix>host="</valuePrefix>
+      <valueSuffix>"</valueSuffix>
+      <delimiter> OR </delimiter>
+      <fieldForLabel>host</fieldForLabel>
+      <fieldForValue>host</fieldForValue>
+      <search>
+        <query>| metadata type=hosts `s1_index`| fields host</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+    </input>
+    <input type="multiselect" token="siteName" searchWhenChanged="true">
+      <label>Site name</label>
+      <choice value="*">ALL</choice>
+      <prefix>(</prefix>
+      <suffix>)</suffix>
+      <fieldForLabel>siteName</fieldForLabel>
+      <fieldForValue>siteName</fieldForValue>
+      <search>
+        <query>`s1_index` $input_management$ | dedup id | dedup siteName | table siteName | sort siteName</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+      <valuePrefix>siteName="</valuePrefix>
+      <valueSuffix>"</valueSuffix>
+      <delimiter> OR </delimiter>
+      <default>*</default>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="time" token="InputTime">
+      <label></label>
+      <default>
+        <earliest>0</earliest>
+        <latest></latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <single>
+        <title>Unresolved Threats</title>
+        <search>
+          <query>`s1_index` $input_management$  sourcetype=threats| fillnull siteName value="NULL" | search $siteName$ |extract reload=true | dedup id | where mitigationStatus!="suspicious" and resolved="false" | stats count as TotalUnresolved</query>
+          <earliest>$InputTime.earliest$</earliest>
+          <latest>$InputTime.latest$</latest>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="rangeColors">["0x53a051","0xdc4e41"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Total Resolved</title>
+        <search>
+          <query>`s1_index` $input_management$ sourcetype=threats| fillnull siteName value="NULL" | search $siteName$ |extract reload=true | dedup id | where resolved="true"  | stats count as TotalResolved</query>
+          <earliest>$InputTime.earliest$</earliest>
+          <latest>$InputTime.latest$</latest>
+        </search>
+        <option name="colorMode">none</option>
+        <option name="drilldown">all</option>
+        <option name="rangeColors">["0xdc4e41","0x53a051"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <chart>
+        <title>Detections by Engine</title>
+        <search>
+          <query>`s1_index` $input_management$  sourcetype=threats| fillnull siteName value="NULL" | search  $siteName$ |extract reload=true |dedup id| makemv delim=", " "engines[]" | rename engines{} as Engines| rex field=Engines mode=sed "s/_/-/g" | top Engines</query>
+          <earliest>$InputTime.earliest$</earliest>
+          <latest>$InputTime.latest$</latest>
+        </search>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="height">141</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>Fileless Unresolved</title>
+        <search>
+          <query>`s1_index` $input_management$ sourcetype=threats | fillnull siteName value="NULL" | search $siteName$ | extract reload=true | dedup id |where resolved="false" and fileContentHash="ffffffffffffffffffffffffffffffffffffffff" | stats count as ActiveContent by mitigationStatus</query>
+          <earliest>$InputTime.earliest$</earliest>
+          <latest>$InputTime.latest$</latest>
+        </search>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0</option>
+        <option name="charting.drilldown">all</option>
+        <option name="height">139</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <title>Active Threats (Raw)</title>
+        <search>
+          <query>`s1_index` $input_management$ sourcetype=threats| fillnull siteName value="NULL" | search $siteName$ | extract reload=true | dedup id |where resolved="false" and mitigationStatus="active" | stats dc(id) as TotalActive | fields TotalActive</query>
+          <earliest>$InputTime.earliest$</earliest>
+          <latest>$InputTime.latest$</latest>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="rangeColors">["0xdc4e41","0xdc4e41"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Detected -Suspicious</title>
+        <search>
+          <query>`s1_index` $input_management$ sourcetype=threats| fillnull siteName value="NULL" | search $siteName$ |extract reload=true | dedup id | where mitigationStatus="suspicious" and resolved="false" | stats count as TotalSuspicious | fields TotalSuspicious</query>
+          <earliest>$InputTime.earliest$</earliest>
+          <latest>$InputTime.latest$</latest>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Mitigated Threats</title>
+        <search>
+          <query>`s1_index` $input_management$ sourcetype=threats| fillnull siteName value="NULL" | search $siteName$ |extract reload=true | dedup id |where mitigationStatus="mitigated" and resolved="false" | stats count as TotalMitigated | fields TotalMitigated</query>
+          <earliest>$InputTime.earliest$</earliest>
+          <latest>$InputTime.latest$</latest>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="rangeColors">["0xdc4e41","0x53a051"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Blocked Threats</title>
+        <search>
+          <query>`s1_index` $input_management$ sourcetype=threats| fillnull siteName value="NULL" | search $siteName$ | extract reload=true | dedup id | where  mitigationStatus="blocked" and resolved="false" | stats count as TotalBlocked | fields TotalBlocked</query>
+          <earliest>$InputTime.earliest$</earliest>
+          <latest>$InputTime.latest$</latest>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Most Prevalent Threats</title>
+        <search>
+          <query>`s1_index` $input_management$ sourcetype=threats| fillnull siteName value="NULL" | search $siteName$ | extract reload=true  | dedup id | eval fileDisplayName=lower(fileDisplayName) | rename fileDisplayName as Name | stats count(Name) as countName by Name | sort 15 - countName</query>
+          <earliest>$InputTime.earliest$</earliest>
+          <latest>$InputTime.latest$</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">45</option>
+        <option name="charting.axisTitleX.text">Threat Name</option>
+        <option name="charting.axisTitleY.text">Threat Count</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.showDataLabels">all</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.legend.placement">none</option>
+        <option name="height">266</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>Top Threats by Classification</title>
+        <search>
+          <query>`s1_index` $input_management$ sourcetype=threats| fillnull siteName value="NULL" | search $siteName$ | extract reload=true | dedup id | eval classification=lower(classification) | rename classification as Classification | stats count(Classification) as countClassification by Classification | sort 15 - countClassification</query>
+          <earliest>$InputTime.earliest$</earliest>
+          <latest>$InputTime.latest$</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">45</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.text">Count</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.showDataLabels">all</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.legend.placement">none</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.splitBy">Classification</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>Top Threats by Engines(overlap possible)</title>
+        <search>
+          <query>`s1_index` $input_management$ sourcetype=threats| fillnull siteName value="NULL" | search $siteName$ | extract reload=true | dedup id | stats count(id) as countid by "engines{}"| rename "engines{}" as Engine,countid as Count | sort 15 - Count</query>
+          <earliest>$InputTime.earliest$</earliest>
+          <latest>$InputTime.latest$</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">45</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.showDataLabels">all</option>
+        <option name="charting.legend.placement">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Most Infected Devices</title>
+        <search>
+          <query>`s1_index` sourcetype=agents OR sourcetype=threats $input_management$| fillnull siteName value="NULL" | search $siteName$ | extract reload=true
+| stats latest(sourcetype) as type latest(siteName) as siteName latest(computerName) as ComputerName latest(host) as Management latest(mitigationStatus) as mitigation latest(resolved) as resolved values(networkInterfaces{}.physical) as macAddress values(networkInterfaces{}.inet{}) as ip latest(agentId) as agentId by id 
+| where type="agents" OR (type="threats" AND mitigation="active" AND resolved="false")
+| eval agentId=if(isnull(agentId),id,agentId)
+| eval threatId=if(type="threats",id,null())
+| fields threatId, ComputerName, Management, mitigation, macAddress, ip, agentId, siteName
+| stats dc(threatId) as Active values(*) as * by agentId
+| fields - threatId
+| where Active&gt;0
+| table ComputerName,Management,siteName,Active, ip, macAddress, agentId
+| sort - Active</query>
+          <earliest>$InputTime.earliest$</earliest>
+          <latest>$InputTime.latest$</latest>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <link target="_blank">/app/sentinelone/manage_threats?form.agent_id=$row.agentId$&amp;form.device_name=$row.ComputerName$&amp;form.management=$row.Management$&amp;inputtime=$InputTime.earliest$</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+</form>

@@ -1,0 +1,110 @@
+
+# Application-level permissions
+
+[]
+access = read : [ * ], write : [ admin, power ]
+
+### EVENT TYPES
+
+[eventtypes]
+export = system
+
+
+### PROPS
+
+[props]
+export = system
+
+
+### TRANSFORMS
+
+[transforms]
+export = system
+
+
+### LOOKUPS
+
+[lookups]
+export = system
+
+
+### VIEWSTATES: even normal users should be able to create shared viewstates
+
+[viewstates]
+access = read : [ * ], write : [ * ]
+export = system
+
+
+### Macros
+
+[macros/s1_index]
+access = read : [ * ], write : [ * ]
+export = system
+owner = nobody
+version = 7.1.1
+modtime = 1535874377.781193000
+
+### Lookups
+
+[collections/agents_lookup]
+access = read : [ * ], write : [ * ]
+export = system
+owner = admin
+version = 7.1.1
+modtime = 1536054181.745292000
+
+[transforms/agnets_lookup_definition]
+access = read : [ * ], write : [ * ]
+export = system
+owner = admin
+version = 7.1.1
+modtime = 1536053880.563030000
+
+[collections/groups_lookup]
+access = read : [ * ], write : [ * ]
+export = system
+owner = admin
+version = 7.1.1
+modtime = 1536059881.033266000
+
+[collections/sites_lookup]
+access = read : [ * ], write : [ * ]
+export = system
+owner = admin
+version = 7.1.1
+modtime = 1540378459.936964000
+
+[transforms/sites_lookup_definition]
+access = read : [ * ], write : [ * ]
+export = system
+owner = admin
+version = 7.1.1
+modtime = 1540378518.463326000
+
+[savedsearches/sites_lookup_search]
+access = read : [ * ], write : [ * ]
+export = system
+owner = admin
+version = 7.1.1
+modtime = 1540388308.944067000
+
+[savedsearches/agents_lookup_search]
+access = read : [ * ], write : [ * ]
+export = system
+owner = admin
+version = 7.1.1
+modtime = 1536059456.733885000
+
+[transforms/groups_lookup_definition]
+access = read : [ * ], write : [ * ]
+export = system
+owner = admin
+version = 7.1.1
+modtime = 1536059849.533815000
+
+[savedsearches/groups_lookup_search]
+access = read : [ * ], write : [ * ]
+export = system
+owner = admin
+version = 7.1.1
+modtime = 1536060547.114917000
