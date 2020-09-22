@@ -19,7 +19,7 @@ jobs:
     - name: Archive Master Release
       uses: juankaram/archive-action@v1.0.0
       with:
-        args: tar -czvf TA-sentinelone.spl TA-sentinelone
+        args: tar -czvf TA-sentinelone_cloud.spl TA-sentinelone_cloud
 
     - name: Save Master Release
       uses: xresloader/upload-to-github-release@v1
